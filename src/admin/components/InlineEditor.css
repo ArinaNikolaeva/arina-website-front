@@ -1,0 +1,97 @@
+/* ==========================================
+   РЕДАКТИРОВАНИЕ — МИНИМАЛЬНЫЕ СТИЛИ
+   ========================================== */
+
+.about-content,
+.hero-text {
+    position: relative;
+    border-radius: var(--radius);
+    cursor: pointer;
+}
+
+.edit-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    border-radius: var(--radius);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    background: transparent;
+    backdrop-filter: none;
+}
+
+/* РЕДАКТИРУЕМЫЙ ТЕКСТ */
+/* В CSS */
+[data-editable].editing-active {
+    outline: 2px solid #FF6B35 !important;
+    outline-offset: 4px !important;
+    background: rgba(255, 107, 53, 0.06) !important;
+    border-radius: 4px !important;
+    padding: 2px 4px !important;
+    cursor: text !important;
+}
+
+/* Специально для h1, чтобы не терять градиент */
+[data-editable="hero.name"].editing-active {
+    background: linear-gradient(135deg, #FFFFFF 0%, var(--color-accent) 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+[data-editable] {
+    display: block !important;
+    width: 100% !important;
+    transition: outline 0.3s ease, background 0.3s ease !important;
+}
+
+.edit-actions {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 9999;
+    background: rgba(18, 18, 18, 0.92);
+    backdrop-filter: blur(16px);
+    padding: 14px 28px;
+    border-radius: 60px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+/* В CSS файл добавьте: */
+.about-content .edit-overlay ~ *,
+.hero-text .edit-overlay ~ * {
+    position: relative;
+    z-index: 1;
+}
+
+/* В CSS файл (например, src/css/editor.css) */
+
+/* Режим редактирования — добавляем отступы между элементами */
+.section-editing [data-editable] {
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
+}
+
+/* Или более гибкий вариант для разных элементов */
+.section-editing .editing-active {
+    margin-top: 15px !important;
+    margin-bottom: 15px !important;
+}
+
+/* Для h1 в hero оставляем как есть */
+.section-editing [data-editable="hero.name"].editing-active {
+    margin-top: 4px !important;
+    margin-bottom: 4px !important;
+}

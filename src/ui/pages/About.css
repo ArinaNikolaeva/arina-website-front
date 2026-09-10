@@ -1,0 +1,281 @@
+/* ==========================================
+   ABOUT — СЕКЦИЯ
+   ========================================== */
+
+/* ✅ СТРОКА 1: Фото + Текст */
+.about-top {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 48px;
+    align-items: start;
+    margin-bottom: 48px;
+}
+
+.about-image img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-hover);
+}
+
+.about-content {
+    position: relative;
+}
+
+.about-content h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--color-text-primary);
+}
+
+.about-experience {
+    font-size: 1rem;
+    color: var(--color-accent);
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.about-content p {
+    color: var(--color-text-secondary);
+    font-size: 1rem;
+    line-height: 1.7;
+    margin-bottom: 14px;
+}
+
+.about-content strong {
+    color: var(--color-text-primary);
+}
+
+.about-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.about-meta span {
+    display: inline-block;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+    transition: all 0.3s ease;
+}
+
+.about-meta span:hover {
+    background: rgba(212, 139, 106, 0.1);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+/* ==========================================
+   СТРОКА 2: ОБРАЗОВАНИЕ (на всю ширину)
+   ========================================== */
+
+.about-education {
+    padding-top: 40px;
+    border-top: 1px solid var(--glass-border);
+}
+
+.about-education-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 24px;
+}
+
+.about-education-icon {
+    color: var(--color-accent);
+    font-size: 1.2rem;
+}
+
+.about-education-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+/* === КАРТОЧКА ОБРАЗОВАНИЯ === */
+.education-item {
+    display: flex;
+    gap: 16px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius);
+    border: 1px solid var(--glass-border);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.education-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--color-accent);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+}
+
+.education-item-icon {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(212, 139, 106, 0.1);
+    color: var(--color-accent);
+    border-radius: 12px;
+    font-size: 1.2rem;
+}
+
+.education-item-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.education-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+
+.education-item-type {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-accent);
+}
+
+.education-item-year {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+.education-item-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 4px;
+}
+
+.education-item-spec {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+}
+
+.education-item-desc {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+/* ==========================================
+   СЕРТИФИКАТЫ (БЕЙДЖИ)
+   ========================================== */
+.about-certificates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.certificate-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    background: rgba(212, 139, 106, 0.08);
+    color: var(--color-accent);
+    border: 1px solid rgba(212, 139, 106, 0.2);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.certificate-badge:hover {
+    background: rgba(212, 139, 106, 0.15);
+    transform: translateY(-2px);
+}
+
+/* ==========================================
+   АДАПТИВ
+   ========================================== */
+
+/* Планшет */
+@media (max-width: 1024px) {
+    .about-top {
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+    }
+
+    .about-education-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Телефон */
+@media (max-width: 768px) {
+    .about-top {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+
+    .about-education-list {
+        grid-template-columns: 1fr;
+    }
+
+    .about-education {
+        padding-top: 24px;
+    }
+
+    .about-education-title {
+        font-size: 1.2rem;
+    }
+}
+
+.education-item.hidden {
+    display: none;
+}
+
+.education-show-all {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 24px auto 0;
+    padding: 12px 32px;
+    background: transparent;
+    color: var(--color-accent);
+    border: 2px solid rgba(212, 139, 106, 0.3);
+    border-radius: 40px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+.education-show-all:hover {
+    background: rgba(212, 139, 106, 0.1);
+    border-color: var(--color-accent);
+    transform: translateY(-2px);
+}
+
+.education-show-icon {
+    transition: transform 0.3s ease;
+}
+
+.education-show-all.open .education-show-icon {
+    transform: rotate(180deg);
+}

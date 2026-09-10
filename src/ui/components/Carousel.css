@@ -1,0 +1,120 @@
+.carousel-wrapper {
+    position: relative;
+    padding: 0 56px;
+}
+
+.carousel-container {
+    overflow: hidden;
+    border-radius: var(--radius);
+}
+
+.carousel-track {
+    display: flex;
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    gap: 24px;
+}
+
+.carousel-slide {
+    flex: 0 0 calc(50% - 12px);
+    min-width: 0;
+}
+
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    z-index: 5;
+}
+
+.carousel-btn:hover {
+    background: var(--color-accent);
+    color: #121212;
+}
+
+.carousel-btn:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+}
+
+.carousel-btn-prev {
+    left: 4px;
+}
+
+.carousel-btn-next {
+    right: 4px;
+}
+
+.carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.carousel-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.carousel-dot.active {
+    background: var(--color-accent);
+    width: 28px;
+    border-radius: 20px;
+}
+
+@media (max-width: 768px) {
+    .carousel-wrapper {
+        padding: 0 40px;
+    }
+    .carousel-slide {
+        flex: 0 0 100%;
+    }
+    .carousel-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .carousel-wrapper {
+        padding: 0 30px;
+    }
+    .carousel-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 0.8rem;
+    }
+}
+/* ==========================================
+   КАРУСЕЛЬ ОТЗЫВОВ (переопределяем)
+   ========================================== */
+.reviews-carousel .review-card {
+    flex: 0 0 calc(50% - 12px);
+    min-width: 0;
+    margin: 8px 0;
+}
+
+@media (max-width: 768px) {
+    .reviews-carousel .review-card {
+        flex: 0 0 100%;
+    }
+}

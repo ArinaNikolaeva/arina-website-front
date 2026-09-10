@@ -1,0 +1,225 @@
+/* ==========================================
+   СТАТЬИ — КАРТОЧКИ В КАРУСЕЛИ
+   ========================================== */
+
+/* === КАРТОЧКА СТАТЬИ === */
+.article-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius);
+    border: 1px solid var(--glass-border);
+    overflow: hidden;
+    transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    cursor: pointer;
+    flex: 0 0 calc(33.333% - 16px);
+    min-width: 0;
+    margin: 8px 0;
+}
+
+.article-card:hover {
+    transform: translateY(-8px);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-hover);
+}
+
+/* === ИЗОБРАЖЕНИЕ === */
+.article-image {
+    width: 100%;
+    height: 200px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+/* === КОНТЕНТ === */
+.article-content {
+    padding: 16px 20px 20px;
+}
+
+.article-category {
+    display: inline-block;
+    padding: 3px 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #121212;
+    border-radius: 0 0 12px 0;
+    margin-bottom: 8px;
+}
+
+.article-content h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    line-height: 1.3;
+    color: var(--color-text-primary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.article-content p {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.article-meta {
+    display: flex;
+    gap: 6px;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+}
+
+/* === АДАПТИВ КАРТОЧЕК === */
+@media (max-width: 1024px) {
+    .article-card {
+        flex: 0 0 calc(50% - 12px);
+    }
+}
+
+@media (max-width: 768px) {
+    .article-card {
+        flex: 0 0 100%;
+    }
+
+    .article-image {
+        height: 180px;
+    }
+}
+
+/* ==========================================
+   МОДАЛКА СТАТЬИ
+   ========================================== */
+
+.article-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.article-modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.article-modal-container {
+    position: relative;
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border-radius: var(--radius);
+    max-width: 640px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-hover);
+}
+
+.article-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    z-index: 10;
+}
+
+.article-modal-close:hover {
+    color: var(--color-accent);
+}
+
+.article-modal-image {
+    width: 100%;
+    height: 220px;
+    background-size: cover;
+    background-position: center;
+}
+
+.article-modal-body {
+    padding: 24px 28px 28px;
+}
+
+.article-modal-category {
+    display: inline-block;
+    padding: 3px 14px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #121212;
+    border-radius: 0 0 12px 0;
+    margin-bottom: 12px;
+}
+
+.article-modal-body h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--color-text-primary);
+}
+
+.article-modal-meta {
+    display: flex;
+    gap: 6px;
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    margin-bottom: 16px;
+}
+
+.article-modal-content {
+    color: var(--color-text-secondary);
+    line-height: 1.8;
+}
+
+.article-modal-content p {
+    margin-bottom: 12px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* === АДАПТИВ МОДАЛКИ === */
+@media (max-width: 600px) {
+    .article-modal-container {
+        max-width: 100%;
+        max-height: 90vh;
+        border-radius: var(--radius-sm);
+    }
+
+    .article-modal-image {
+        height: 160px;
+    }
+
+    .article-modal-body {
+        padding: 20px;
+    }
+
+    .article-modal-body h2 {
+        font-size: 1.2rem;
+    }
+}

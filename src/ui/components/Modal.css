@@ -1,0 +1,199 @@
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius);
+    max-width: 800px;
+    width: 100%;
+    max-height: 90vh;           /* ← максимум 90% высоты экрана */
+    overflow-y: auto;           /* ← прокрутка при длинном содержимом */
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+}
+/* Стили для скроллбара (опционально, красиво) */
+.modal-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: var(--color-bg-secondary);
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: var(--color-accent);
+    border-radius: 10px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: var(--color-accent-dark);
+}
+.modal-close {
+    position: sticky;
+    top: 16px;
+    float: right;
+    margin: 16px 16px 0 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+    color: var(--color-text-primary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.modal-close:hover {
+    background: var(--color-accent);
+    color: #121212;
+}
+
+.modal-image {
+    width: 100%;
+    height: 300px;
+    overflow: hidden;
+}
+
+.modal-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.modal-body {
+    padding: 32px 40px 40px;
+}
+
+.modal-category {
+    display: inline-block;
+    background: var(--color-accent);
+    color: #121212;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 4px 14px;
+    border-radius: 40px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+.modal-body h2 {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.modal-meta {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+}
+
+.modal-text {
+    color: var(--color-text-secondary);
+    line-height: 1.8;
+}
+
+.modal-text p {
+    margin-bottom: 16px;
+}
+
+.modal-stars {
+    color: var(--color-accent);
+    font-size: 1.8rem;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+}
+
+.modal-review-text {
+    font-size: 1.2rem;
+    line-height: 1.8;
+    color: var(--color-text-primary);
+    margin-bottom: 16px;
+}
+
+.modal-review-author {
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+}
+
+.modal-review-date {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+.modal-review {
+    max-width: 600px;
+}
+
+@media (max-width: 768px) {
+    .modal-body {
+        padding: 20px;
+    }
+    .modal-image {
+        height: 200px;
+    }
+    .modal-body h2 {
+        font-size: 1.4rem;
+    }
+}
+
+/* ==========================================
+   ДЕТАЛИ ОТЗЫВА В МОДАЛКЕ
+   ========================================== */
+.modal-details {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--glass-border);
+}
+
+.modal-detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 0.9rem;
+}
+
+.modal-detail-label {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.modal-detail-stars {
+    color: var(--color-accent);
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+/* ==========================================
+   ИМЯ В МОДАЛКЕ ОТЗЫВА
+   ========================================== */
+.modal-review-name {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 4px;
+    line-height: 1.2;
+}
+
+.modal-review-name + .modal-stars {
+    margin-bottom: 16px;
+}

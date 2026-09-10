@@ -1,0 +1,159 @@
+/* ==========================================
+   ГЛОБАЛЬНЫЕ ИМПОРТЫ
+   ========================================== */
+@import '../../src/ui/styles/variables.css';
+@import '../../src/ui/styles/global.css';
+
+/* ==========================================
+   КОМПОНЕНТЫ
+   ========================================== */
+@import '../../src/ui/components/Button.css';
+@import '../../src/ui/components/Card.css';
+@import '../../src/ui/components/Carousel.css';
+@import '../../src/ui/components/Modal.css';
+@import '../../src/ui/components/Reviews.css';
+
+/* ==========================================
+   СТРАНИЦЫ
+   ========================================== */
+@import '../../src/ui/pages/Hero.css';
+@import '../../src/ui/pages/About.css';
+@import '../../src/ui/pages/FAQ.css';
+@import '../../src/ui/pages/Articles.css';  /* ← ДОБАВИТЬ ЭТУ СТРОКУ */
+
+/* ==========================================
+   LAYOUT
+   ========================================== */
+@import '../../src/ui/layouts/Header.css';
+@import '../../src/ui/layouts/Footer.css';
+
+/* ==========================================
+   АДМИН-МОДУЛИ
+   ========================================== */
+@import '../../src/admin/components/AuthModal.css';
+@import '../../src/admin/components/InlineEditor.css';
+
+/* ==========================================
+   ГЛОБАЛЬНЫЕ ИМПОРТЫ
+   ========================================== */
+@import '../../src/ui/styles/variables.css';
+@import '../../src/ui/styles/global.css';
+
+/* ==========================================
+   КОМПОНЕНТЫ
+   ========================================== */
+@import '../../src/ui/components/Button.css';
+@import '../../src/ui/components/Card.css';
+@import '../../src/ui/components/Carousel.css';
+@import '../../src/ui/components/Modal.css';
+@import '../../src/ui/components/Reviews.css';
+@import '../../src/ui/components/StatsCounter.css';
+/* ==========================================
+   СТРАНИЦЫ
+   ========================================== */
+@import '../../src/ui/pages/Hero.css';
+@import '../../src/ui/pages/About.css';
+@import '../../src/ui/pages/FAQ.css';
+
+/* ==========================================
+   LAYOUT
+   ========================================== */
+@import '../../src/ui/layouts/Header.css';
+@import '../../src/ui/layouts/Footer.css';
+
+/* ==========================================
+   АДМИН-МОДУЛИ
+   ========================================== */
+@import '../../src/admin/components/AuthModal.css';
+@import '../../src/admin/components/InlineEditor.css';
+@import '../../src/admin/components/AdminPanel.css';  /* ← НОВЫЙ */
+
+
+/* ==========================================
+   КАСТОМНЫЙ СКРОЛЛБАР (ЧЁРНО-СЕРО-ОРАНЖЕВЫЙ)
+   ========================================== */
+
+/* === WebKit (Chrome, Safari, Edge) === */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #D48B6A;
+}
+
+/* === Для модальных окон === */
+.review-form-container::-webkit-scrollbar,
+.modal-content::-webkit-scrollbar,
+.admin-modal::-webkit-scrollbar {
+    width: 6px;
+}
+
+.review-form-container::-webkit-scrollbar-track,
+.modal-content::-webkit-scrollbar-track,
+.admin-modal::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 4px;
+}
+
+.review-form-container::-webkit-scrollbar-thumb,
+.modal-content::-webkit-scrollbar-thumb,
+.admin-modal::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+
+.review-form-container::-webkit-scrollbar-thumb:hover,
+.modal-content::-webkit-scrollbar-thumb:hover,
+.admin-modal::-webkit-scrollbar-thumb:hover {
+    background: #D48B6A;
+}
+
+/* === Для текстовых полей === */
+textarea::-webkit-scrollbar {
+    width: 6px;
+}
+
+textarea::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+    background: #D48B6A;
+}
+
+/* === Firefox === */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #555 #1a1a1a;
+}
+
+.review-form-container,
+.modal-content,
+.admin-modal {
+    scrollbar-width: thin;
+    scrollbar-color: #555 rgba(255, 255, 255, 0.04);
+}
+
+textarea {
+    scrollbar-width: thin;
+    scrollbar-color: #555 rgba(255, 255, 255, 0.04);
+}

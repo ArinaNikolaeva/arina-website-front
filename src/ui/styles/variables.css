@@ -1,0 +1,16 @@
+:root {
+    --color-bg-primary: #121212;
+    --color-bg-secondary: #1A1A1A;
+    --color-text-primary: #FFFFFF;
+    --color-text-secondary: #B0B0B0;
+    --color-text-muted: #7A7A7A;
+    --color-accent: #D48B6A;
+    --color-accent-dark: #B8735C;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --radius: 24px;
+    --radius-sm: 12px;
+    --container-width: 1100px;
+    --spacing: 24px;
+    --font-primary: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+}
