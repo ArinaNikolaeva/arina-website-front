@@ -1,11 +1,11 @@
 // ==========================================
-// ФОРМА ДОБАВЛЕНИЯ ОТЗЫВА (С РАЗДЕЛЬНЫМИ ОЦЕНКАМИ)
+// ФОРМА ДОБАВЛЕНИЯ ОТЗЫВА (API)
 // ==========================================
 
-import { addReview } from '../../data/reviews.js';
+import { api } from '../../data/api.js';
 import { reviewCategories } from '../../data/categories.js';
 
-// ✅ КРИТЕРИИ ДЛЯ ОЦЕНКИ (как в развёрнутых отзывах)
+// ✅ КРИТЕРИИ ДЛЯ ОЦЕНКИ
 const ratingCriteria = [
     { id: 'professionalism', label: 'Профессионализм' },
     { id: 'empathy', label: 'Эмпатия и внимание' },
@@ -42,23 +42,22 @@ function openReviewModal() {
                 <button class="review-form-close" id="reviewFormClose">✕</button>
                 <h2>✎ Оставить отзыв</h2>
                 <p class="review-form-subtitle">Поделитесь своим опытом работы с Ариной</p>
-                
+
                 <form id="reviewForm">
                     <div class="form-group">
                         <label for="reviewName">Ваше имя</label>
                         <input type="text" id="reviewName" placeholder="Например, Екатерина" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="reviewCategory">Тема отзыва</label>
                         <select id="reviewCategory">
-                            ${reviewCategories.map(cat => 
+                            ${reviewCategories.map(cat =>
                                 `<option value="${cat.value}">${cat.label}</option>`
                             ).join('')}
                         </select>
                     </div>
-                    
-                    <!-- РАЗДЕЛЬНЫЕ ОЦЕНКИ ПО КРИТЕРИЯМ -->
+
                     <div class="form-group">
                         <label>Оцените работу по критериям</label>
                         <div class="rating-criteria">
@@ -66,7 +65,7 @@ function openReviewModal() {
                                 <div class="rating-criterion">
                                     <span class="criterion-label">${criterion.label}</span>
                                     <div class="criterion-stars" data-criterion="${criterion.id}">
-                                        ${[1,2,3,4,5].map(val => 
+                                        ${[1,2,3,4,5].map(val =>
                                             `<span class="star" data-value="${val}">☆</span>`
                                         ).join('')}
                                     </div>
@@ -75,24 +74,23 @@ function openReviewModal() {
                             `).join('')}
                         </div>
                     </div>
-                    
-                    <!-- ОБЩАЯ ОЦЕНКА (средняя) -->
+
                     <div class="form-group">
                         <label>Общая оценка</label>
                         <div class="rating-stars" id="ratingStars">
-                            ${[1,2,3,4,5].map(val => 
+                            ${[1,2,3,4,5].map(val =>
                                 `<span class="star" data-value="${val}">☆</span>`
                             ).join('')}
                         </div>
                         <input type="hidden" id="reviewRating" value="5">
                         <span class="rating-average" id="ratingAverage">Средняя: 5.0</span>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="reviewText">Ваш отзыв</label>
                         <textarea id="reviewText" rows="5" placeholder="Расскажите о вашем опыте..." required></textarea>
                     </div>
-                    
+
                     <button type="submit" class="btn btn-primary submit-review-btn">
                         ✎ Отправить на модерацию
                     </button>
@@ -106,10 +104,9 @@ function openReviewModal() {
 }
 
 function setupModalHandlers(modal) {
-    // === ЗАКРЫТИЕ ===
     const closeBtn = modal.querySelector('#reviewFormClose');
     closeBtn.addEventListener('click', () => modal.remove());
-    
+
     modal.addEventListener('click', (e) => {
         if (e.target === modal || e.target.classList.contains('review-form-overlay')) {
             modal.remove();
@@ -145,10 +142,10 @@ function setupModalHandlers(modal) {
             star.addEventListener('click', () => {
                 selectedRating = parseInt(star.dataset.value);
                 criterionRatings[criterionId] = selectedRating;
-                
+
                 const input = container.parentElement.querySelector('.criterion-rating');
                 if (input) input.value = selectedRating;
-                
+
                 highlightStars(stars, selectedRating);
                 updateAverageRating();
             });
@@ -160,10 +157,10 @@ function setupModalHandlers(modal) {
         const sum = values.reduce((a, b) => a + b, 0);
         const avg = sum / values.length;
         const rounded = Math.round(avg * 10) / 10;
-        
+
         totalInput.value = Math.round(avg);
         averageDisplay.textContent = `Средняя: ${rounded.toFixed(1)}`;
-        
+
         const mainStars = modal.querySelector('#ratingStars').querySelectorAll('.star');
         highlightStars(mainStars, Math.round(avg));
     }
@@ -189,7 +186,7 @@ function setupModalHandlers(modal) {
 
     // === ОТПРАВКА ФОРМЫ ===
     const form = modal.querySelector('#reviewForm');
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const name = document.getElementById('reviewName').value.trim();
@@ -213,18 +210,30 @@ function setupModalHandlers(modal) {
             return;
         }
 
-        addReview({ name, text, rating, category, criteria: criteriaRatings });
-        
-        modal.remove();
-        showToast('Спасибо! Ваш отзыв отправлен на модерацию.', 'success');
-        
-        setTimeout(() => {
-            if (typeof window.refreshReviews === 'function') {
-                window.refreshReviews();
-            } else {
-                window.location.reload();
-            }
-        }, 2000);
+        try {
+            // Отправка в БД
+            await api.reviews.create({
+                name,
+                text,
+                rating,
+                category,
+                criteria: criteriaRatings
+            });
+
+            modal.remove();
+            showToast('Спасибо! Ваш отзыв отправлен на модерацию.', 'success');
+
+            setTimeout(() => {
+                if (typeof window.refreshReviews === 'function') {
+                    window.refreshReviews();
+                } else {
+                    window.location.reload();
+                }
+            }, 2000);
+        } catch (err) {
+            console.error('❌ Ошибка отправки отзыва:', err);
+            showToast('❌ Не удалось отправить отзыв. Попробуйте позже.', 'warning');
+        }
     });
 }
 

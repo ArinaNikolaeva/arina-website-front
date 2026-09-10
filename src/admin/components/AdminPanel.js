@@ -2,8 +2,7 @@
 // ПАНЕЛЬ УПРАВЛЕНИЯ АДМИНИСТРАТОРА (САЙДБАР)
 // ==========================================
 
-import { siteConfig } from '../../data/siteConfig.js';
-
+import { api } from '../../data/api.js';
 import { showNotification } from './moderation/helpers.js';
 import { openReviewsModeration } from './moderation/ReviewsModeration.js';
 import { openArticlesModeration } from './moderation/ArticlesModeration.js';
@@ -11,7 +10,9 @@ import { openFaqModeration } from './moderation/FaqModeration.js';
 import { openEducationEditor } from './moderation/EducationEditor.js';
 import { openContactsEditor } from './moderation/ContactsEditor.js';
 
-import { reviewsData } from '../../data/reviews.js';
+// ==========================================
+// ИНИЦИАЛИЗАЦИЯ
+// ==========================================
 
 export function initAdminPanel() {
     const panelBtn = document.getElementById('adminPanelBtn');
@@ -32,22 +33,29 @@ export function initAdminPanel() {
     const isAdmin = localStorage.getItem('isAdmin') === 'true';
     if (isAdmin) {
         panelBtn.style.display = 'inline-block';
-        // ✅ Проверяем, есть ли новые отзывы
         updatePanelNotificationDot();
     }
 
     console.log('🛠️ AdminPanel инициализирован');
 }
 
-// === ПУЛЬСИРУЮЩАЯ ТОЧКА НА КНОПКЕ "ПАНЕЛЬ" ===
-function updatePanelNotificationDot() {
+// ==========================================
+// ПУЛЬСИРУЮЩАЯ ТОЧКА НА КНОПКЕ "ПАНЕЛЬ"
+// ==========================================
+
+export async function updatePanelNotificationDot() {
     const panelBtn = document.getElementById('adminPanelBtn');
     if (!panelBtn) return;
 
-    // Считаем отзывы, которые ещё не промодерированы
-    const pending = getPendingReviewsCount();
+    let pending = 0;
+    try {
+        const reviews = await api.reviews.getPending();
+        pending = reviews.length;
+    } catch (err) {
+        console.warn('⚠️ Не удалось получить отзывы на модерации:', err.message);
+    }
 
-    // Удаляем старую точку, если есть
+    // Удаляем старую точку
     panelBtn.querySelector('.panel-notification-dot')?.remove();
 
     if (pending > 0) {
@@ -60,33 +68,26 @@ function updatePanelNotificationDot() {
     }
 }
 
-// === СЧИТАЕМ ОТЗЫВЫ НА МОДЕРАЦИИ ===
-function getPendingReviewsCount() {
-    const saved = localStorage.getItem('psychologist_reviews');
-    if (saved) {
-        try {
-            const parsed = JSON.parse(saved);
-            return parsed.filter(r => r.isModerated === false).length;
-        } catch (e) {}
+// ==========================================
+// ПОЛУЧЕНИЕ ДАННЫХ
+// ==========================================
+
+async function getContacts() {
+    try {
+        return await api.contacts.get();
+    } catch (err) {
+        console.warn('⚠️ Не удалось загрузить контакты:', err.message);
+        return { telegram: '', vk: '', email: '' };
     }
-    return 0;
 }
 
-// === ХЕЛПЕРЫ ===
-function getContacts() {
-    const saved = localStorage.getItem('siteContacts');
-    if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
+async function getEducation() {
+    try {
+        return await api.education.getAll();
+    } catch (err) {
+        console.warn('⚠️ Не удалось загрузить образование:', err.message);
+        return [];
     }
-    return { ...siteConfig.contacts };
-}
-
-function getEducation() {
-    const saved = localStorage.getItem('siteEducation');
-    if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
-    }
-    return siteConfig.person.education || [];
 }
 
 function getStats() {
@@ -97,13 +98,27 @@ function getStats() {
     return { articles, reviews, faq, editable };
 }
 
-// === БОКОВАЯ ПАНЕЛЬ ===
-function openAdminSidebar() {
+// ==========================================
+// БОКОВАЯ ПАНЕЛЬ
+// ==========================================
+
+async function openAdminSidebar() {
     if (document.querySelector('.admin-sidebar')) return;
 
+    // Загружаем данные из БД
+    const [contacts, education] = await Promise.all([
+        getContacts(),
+        getEducation(),
+    ]);
+
     const stats = getStats();
-    const contacts = getContacts();
-    const education = getEducation();
+
+    // Проверка отзывов на модерации
+    let pendingCount = 0;
+    try {
+        const pending = await api.reviews.getPending();
+        pendingCount = pending.length;
+    } catch (err) {}
 
     const overlay = document.createElement('div');
     overlay.className = 'admin-sidebar-overlay';
@@ -128,7 +143,7 @@ function openAdminSidebar() {
                     <span class="stat-icon">❝</span>
                     <span class="stat-value">${stats.reviews}</span>
                     <span class="stat-label">Отзывов</span>
-                    ${getPendingReviewsCount() > 0 ? '<span class="panel-notification-dot stat-dot"></span>' : ''}
+                    ${pendingCount > 0 ? '<span class="panel-notification-dot stat-dot"></span>' : ''}
                 </div>
                 <div class="stat-item stat-item-clickable" id="faqStatTile" title="Управление FAQ">
                     <span class="stat-icon">?</span>
@@ -164,12 +179,11 @@ function openAdminSidebar() {
             <div class="admin-section-title">Режим редактирования</div>
             <div class="admin-info">
                 <p>Нажмите <strong>✎ Редактировать</strong> на любом тексте с оранжевым контуром.</p>
-                <p>Изменения сохраняются в <code>localStorage</code>.</p>
+                <p>Изменения сохраняются в <code>базу данных</code>.</p>
             </div>
 
             <div class="admin-section-title">Действия</div>
             <div class="admin-actions">
-                <button class="admin-btn admin-btn-danger" id="adminClearData">⊘ Очистить данные</button>
                 <button class="admin-btn admin-btn-secondary" id="adminRefreshData">↻ Обновить статистику</button>
             </div>
         </div>
@@ -183,6 +197,7 @@ function openAdminSidebar() {
         sidebar.classList.add('active');
     });
 
+    // === ЗАКРЫТИЕ ===
     function closeSidebar() {
         overlay.classList.remove('active');
         sidebar.classList.remove('active');
@@ -203,24 +218,29 @@ function openAdminSidebar() {
     });
 
     // === ОБРАБОТЧИКИ КЛИКА ===
-    sidebar.querySelector('#editContactsBtn')?.addEventListener('click', () => openContactsEditor(sidebar));
-    sidebar.querySelector('#educationStatTile')?.addEventListener('click', () => openEducationEditor(sidebar));
-    sidebar.querySelector('#reviewsStatTile')?.addEventListener('click', () => openReviewsModeration());
-    sidebar.querySelector('#articlesStatTile')?.addEventListener('click', () => openArticlesModeration());
-    sidebar.querySelector('#faqStatTile')?.addEventListener('click', () => openFaqModeration());
+    sidebar.querySelector('#editContactsBtn')?.addEventListener('click', () => {
+        openContactsEditor(sidebar);
+    });
 
-    sidebar.querySelector('#adminClearData')?.addEventListener('click', () => {
-        if (confirm('⚠ Вы уверены, что хотите очистить все сохранённые данные?')) {
-            localStorage.removeItem('editorData');
-            localStorage.removeItem('siteContacts');
-            localStorage.removeItem('siteEducation');
-            localStorage.removeItem('siteCertificates');
-            localStorage.removeItem('siteArticles');
-            localStorage.removeItem('siteFaq');
-            showNotification('⊘ Все данные очищены', 'success');
-            closeSidebar();
-        }
+    sidebar.querySelector('#educationStatTile')?.addEventListener('click', () => {
+        openEducationEditor(sidebar);
+    });
+
+    sidebar.querySelector('#reviewsStatTile')?.addEventListener('click', () => {
+        openReviewsModeration();
+    });
+
+    sidebar.querySelector('#articlesStatTile')?.addEventListener('click', () => {
+        openArticlesModeration();
+    });
+
+    sidebar.querySelector('#faqStatTile')?.addEventListener('click', () => {
+        openFaqModeration();
+    });
+
+    // === ОБНОВЛЕНИЕ СТАТИСТИКИ ===
+    sidebar.querySelector('#adminRefreshData')?.addEventListener('click', () => {
+        closeSidebar();
+        setTimeout(openAdminSidebar, 350);
     });
 }
-// Экспорт для обновления точки из других мест
-export { updatePanelNotificationDot };

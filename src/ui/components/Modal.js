@@ -1,9 +1,8 @@
 // ==========================================
-// МОДАЛКИ ДЛЯ СТАТЕЙ И ОТЗЫВОВ
+// МОДАЛКИ ДЛЯ СТАТЕЙ И ОТЗЫВОВ (API)
 // ==========================================
 
-import { articlesData } from '../../data/articles.js';
-import { reviewsData } from '../../data/reviews.js';
+import { api } from '../../data/api.js';
 
 export function initModals() {
     // ==========================================
@@ -17,14 +16,31 @@ export function initModals() {
     const modalMeta = document.getElementById('modalMeta');
     const modalText = document.getElementById('modalText');
 
-    function openArticle(index) {
-        const article = articlesData[index];
+    // Кэш статей (чтобы не делать запрос на каждый клик)
+    let articlesCache = null;
+
+    async function getArticles() {
+        if (!articlesCache) {
+            try {
+                articlesCache = await api.articles.getAll();
+            } catch (err) {
+                console.error('❌ Ошибка загрузки статей:', err);
+                return [];
+            }
+        }
+        return articlesCache;
+    }
+
+    async function openArticle(id) {
+        const articles = await getArticles();
+        const article = articles.find(a => a.id === id);
         if (!article) return;
+
         modalImage.src = article.image;
         modalImage.alt = article.title;
         modalCategory.textContent = article.category;
         modalTitle.textContent = article.title;
-        modalMeta.textContent = `${article.date} · ${article.readingTime}`;
+        modalMeta.textContent = `${article.date} · ${article.reading_time}`;
         modalText.innerHTML = article.content;
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -36,12 +52,12 @@ export function initModals() {
     }
 
     // === ОТКРЫТИЕ ПО КЛИКУ НА КАРТОЧКУ ===
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', async (e) => {
         const card = e.target.closest('.article-card');
         if (card) {
-            const index = parseInt(card.dataset.index);
-            if (!isNaN(index) && articlesData[index]) {
-                openArticle(index);
+            const id = parseInt(card.dataset.articleId);
+            if (!isNaN(id)) {
+                await openArticle(id);
             }
         }
     });
@@ -77,8 +93,24 @@ export function initModals() {
         recommendation: 'Готовность рекомендовать'
     };
 
-    function openReview(id) {
-        const review = reviewsData.find(r => r.id === id);
+    // Кэш отзывов
+    let reviewsCache = null;
+
+    async function getReviews() {
+        if (!reviewsCache) {
+            try {
+                reviewsCache = await api.reviews.getPublished();
+            } catch (err) {
+                console.error('❌ Ошибка загрузки отзывов:', err);
+                return [];
+            }
+        }
+        return reviewsCache;
+    }
+
+    async function openReview(id) {
+        const reviews = await getReviews();
+        const review = reviews.find(r => r.id === id);
         if (!review) return;
 
         if (rName) rName.textContent = review.name;
@@ -107,11 +139,13 @@ export function initModals() {
         document.body.style.overflow = '';
     }
 
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', async (e) => {
         const reviewCard = e.target.closest('.review-card');
         if (reviewCard) {
             const id = parseInt(reviewCard.dataset.reviewId);
-            if (!isNaN(id)) openReview(id);
+            if (!isNaN(id)) {
+                await openReview(id);
+            }
         }
     });
 

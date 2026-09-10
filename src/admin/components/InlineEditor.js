@@ -1,43 +1,17 @@
 // ==========================================
-// РЕДАКТИРОВАНИЕ — ПРОСТАЯ РАБОЧАЯ ВЕРСИЯ
+// INLINE РЕДАКТОР — HERO И ABOUT (API)
 // ==========================================
 
-export function loadData() {
-    const saved = localStorage.getItem('editorData');
-    if (saved) {
-        try { return JSON.parse(saved); } 
-        catch (e) { return JSON.parse(JSON.stringify(defaultData)); }
-    }
-    localStorage.setItem('editorData', JSON.stringify(defaultData));
-    return JSON.parse(JSON.stringify(defaultData));
-}
+import { api } from '../../data/api.js';
+import { showNotification } from './moderation/helpers.js';
 
-export function saveData(data) {
-    localStorage.setItem('editorData', JSON.stringify(data));
-}
-
-export function applyDataToDOM(data) {
-    const heroName = document.querySelector('.hero-text h1');
-    const heroSubtitle = document.querySelector('.hero-text .subtitle');
-    const heroDesc = document.querySelector('.hero-text .description');
-    if (heroName) heroName.textContent = data.hero.name;
-    if (heroSubtitle) heroSubtitle.textContent = data.hero.subtitle;
-    if (heroDesc) heroDesc.textContent = data.hero.description;
-
-    const aboutName = document.querySelector('.about-content h3');
-    const aboutExp = document.querySelector('.about-experience');
-    const aboutIntro = document.querySelector('.about-content p:first-of-type');
-    const aboutDesc = document.querySelector('.about-content p:last-of-type');
-    if (aboutName) aboutName.textContent = data.about.name;
-    if (aboutExp) aboutExp.textContent = data.about.experience;
-    if (aboutIntro) aboutIntro.innerHTML = `<strong>Привет! Я ${data.about.name}.</strong> ${data.about.intro}`;
-    if (aboutDesc) aboutDesc.textContent = data.about.description;
-}
+// ==========================================
+// ИНИЦИАЛИЗАЦИЯ
+// ==========================================
 
 export function initInlineEditor() {
     const isAdmin = localStorage.getItem('isAdmin') === 'true';
-    
-    
+
     if (isAdmin) {
         addEditOverlays();
     } else {
@@ -45,11 +19,14 @@ export function initInlineEditor() {
     }
 }
 
-// === ДОБАВИТЬ ОВЕРЛЕИ ===
+// ==========================================
+// ДОБАВИТЬ ОВЕРЛЕИ
+// ==========================================
+
 function addEditOverlays() {
     const aboutContent = document.querySelector('.about-content');
     const heroText = document.querySelector('.hero-text');
-    
+
     if (aboutContent && !aboutContent.querySelector('.edit-overlay')) {
         aboutContent.style.position = 'relative';
         const overlay = createOverlay('about', aboutContent);
@@ -65,7 +42,10 @@ function addEditOverlays() {
     }
 }
 
-// === СОЗДАТЬ ОВЕРЛЕЙ ===
+// ==========================================
+// СОЗДАТЬ ОВЕРЛЕЙ
+// ==========================================
+
 function createOverlay(section, parentElement) {
     const overlay = document.createElement('div');
     overlay.className = 'edit-overlay';
@@ -86,7 +66,6 @@ function createOverlay(section, parentElement) {
         -webkit-backdrop-filter: none;
         pointer-events: none;
         cursor: pointer;
-        /* ✅ Плавное растворение через box-shadow */
         box-shadow: inset 0 0 60px 40px rgba(18, 18, 18, 0);
     `;
 
@@ -142,11 +121,9 @@ function createOverlay(section, parentElement) {
     if (parent) {
         let hoverTimeout;
 
-        // === НАВЕДЕНИЕ ===
         parent.addEventListener('mouseenter', () => {
             clearTimeout(hoverTimeout);
             if (overlay.dataset.editing !== 'true') {
-                // Плавное затемнение с размытием
                 overlay.style.background = 'rgba(18, 18, 18, 0.25)';
                 overlay.style.backdropFilter = 'blur(3px)';
                 overlay.style.webkitBackdropFilter = 'blur(3px)';
@@ -161,7 +138,6 @@ function createOverlay(section, parentElement) {
             }
         });
 
-        // === УХОД ===
         parent.addEventListener('mouseleave', () => {
             hoverTimeout = setTimeout(() => {
                 if (overlay.dataset.editing !== 'true') {
@@ -196,7 +172,10 @@ function createOverlay(section, parentElement) {
     return overlay;
 }
 
-// === УДАЛИТЬ ОВЕРЛЕИ ===
+// ==========================================
+// УДАЛИТЬ ОВЕРЛЕИ
+// ==========================================
+
 function removeEditOverlays() {
     document.querySelectorAll('.edit-overlay').forEach(overlay => overlay.remove());
     document.querySelectorAll('[data-editable]').forEach(el => {
@@ -212,28 +191,32 @@ function removeEditOverlays() {
     document.querySelectorAll('.edit-actions').forEach(el => el.remove());
 }
 
-// === ПЕРЕКЛЮЧЕНИЕ ===
-function toggleSectionEdit(section, overlay) {
+// ==========================================
+// ПЕРЕКЛЮЧЕНИЕ РЕЖИМА РЕДАКТИРОВАНИЯ
+// ==========================================
+
+async function toggleSectionEdit(section, overlay) {
     const isEditing = overlay.dataset.editing === 'true';
-    
+
     if (isEditing) {
-        saveSection(section);
+        // === СОХРАНЯЕМ В БД ===
+        await saveSection(section);
         overlay.dataset.editing = 'false';
         overlay.style.background = 'transparent';
         overlay.style.backdropFilter = 'none';
         overlay.style.webkitBackdropFilter = 'none';
         overlay.style.pointerEvents = 'none';
-        
+
         const btn = overlay.querySelector('.edit-overlay-btn');
         if (btn) {
             btn.style.display = 'block';
             btn.style.opacity = '0';
             btn.style.pointerEvents = 'none';
         }
-        
+
         const actions = document.querySelector('.edit-actions');
         if (actions) actions.remove();
-        
+
         document.querySelectorAll(`[data-editable^="${section}"]`).forEach(el => {
             el.contentEditable = 'false';
             el.classList.remove('editing-active');
@@ -244,29 +227,26 @@ function toggleSectionEdit(section, overlay) {
             el.style.padding = '0';
             el.style.color = '';
         });
-        
-        showToast('Изменения сохранены!');
+
+        showNotification('✓ Изменения сохранены', 'success');
     } else {
+        // === ВКЛЮЧАЕМ РЕДАКТИРОВАНИЕ ===
         closeOtherSections(overlay);
-        
+
         overlay.dataset.editing = 'true';
         overlay.style.background = 'transparent';
         overlay.style.backdropFilter = 'none';
         overlay.style.webkitBackdropFilter = 'none';
         overlay.style.pointerEvents = 'none';
-        
+
         const btn = overlay.querySelector('.edit-overlay-btn');
-        if (btn) {
-            btn.style.display = 'none';
-        }
-        
+        if (btn) btn.style.display = 'none';
+
         const parentSection = overlay.closest('.section');
-        if (parentSection) {
-            parentSection.classList.add('section-editing');
-        }
-        
+        if (parentSection) parentSection.classList.add('section-editing');
+
         showEditActions(section, overlay);
-        
+
         document.querySelectorAll(`[data-editable^="${section}"]`).forEach(el => {
             el.contentEditable = 'true';
             el.classList.add('editing-active');
@@ -274,7 +254,10 @@ function toggleSectionEdit(section, overlay) {
     }
 }
 
-// === ЗАКРЫТЬ ВСЕ ДРУГИЕ СЕКЦИИ ===
+// ==========================================
+// ЗАКРЫТЬ ДРУГИЕ СЕКЦИИ
+// ==========================================
+
 function closeOtherSections(currentOverlay) {
     document.querySelectorAll('.edit-overlay').forEach(overlay => {
         if (overlay !== currentOverlay && overlay.dataset.editing === 'true') {
@@ -284,14 +267,14 @@ function closeOtherSections(currentOverlay) {
             overlay.style.backdropFilter = 'none';
             overlay.style.webkitBackdropFilter = 'none';
             overlay.style.pointerEvents = 'none';
-            
+
             const btn = overlay.querySelector('.edit-overlay-btn');
             if (btn) {
                 btn.style.display = 'block';
                 btn.style.opacity = '0';
                 btn.style.pointerEvents = 'none';
             }
-            
+
             document.querySelectorAll(`[data-editable^="${section}"]`).forEach(el => {
                 el.contentEditable = 'false';
                 el.classList.remove('editing-active');
@@ -304,16 +287,19 @@ function closeOtherSections(currentOverlay) {
             });
         }
     });
-    
+
     const actions = document.querySelector('.edit-actions');
     if (actions) actions.remove();
 }
 
-// === ПЛАВАЮЩИЕ КНОПКИ ===
+// ==========================================
+// ПЛАВАЮЩИЕ КНОПКИ
+// ==========================================
+
 function showEditActions(section, overlay) {
     const oldActions = document.querySelector('.edit-actions');
     if (oldActions) oldActions.remove();
-    
+
     const actions = document.createElement('div');
     actions.className = 'edit-actions';
     actions.style.cssText = `
@@ -333,12 +319,12 @@ function showEditActions(section, overlay) {
         box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
         animation: slideUp 0.3s ease;
     `;
-    
+
     const sectionNames = {
         hero: 'Главный блок',
         about: 'Обо мне'
     };
-    
+
     const indicator = document.createElement('span');
     indicator.textContent = `✎ Редактирование: ${sectionNames[section] || section}`;
     indicator.style.cssText = `
@@ -348,7 +334,7 @@ function showEditActions(section, overlay) {
         margin-right: 8px;
         font-family: 'Segoe UI', sans-serif;
     `;
-    
+
     const saveBtn = document.createElement('button');
     saveBtn.textContent = 'Сохранить';
     saveBtn.style.cssText = `
@@ -374,7 +360,7 @@ function showEditActions(section, overlay) {
     saveBtn.addEventListener('click', () => {
         toggleSectionEdit(section, overlay);
     });
-    
+
     const cancelBtn = document.createElement('button');
     cancelBtn.textContent = '✕ Отмена';
     cancelBtn.style.cssText = `
@@ -399,24 +385,25 @@ function showEditActions(section, overlay) {
         cancelBtn.style.color = '#B0B0B0';
         cancelBtn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
     });
-    cancelBtn.addEventListener('click', () => {
+    cancelBtn.addEventListener('click', async () => {
         overlay.dataset.editing = 'false';
-        
         overlay.style.background = 'transparent';
         overlay.style.backdropFilter = 'none';
         overlay.style.webkitBackdropFilter = 'none';
         overlay.style.pointerEvents = 'none';
-        
+
         const btn = overlay.querySelector('.edit-overlay-btn');
         if (btn) {
             btn.style.display = 'block';
             btn.style.opacity = '0';
             btn.style.pointerEvents = 'none';
         }
-        
+
         actions.remove();
-        applyDataToDOM(loadData());
-        
+
+        // Перезагружаем данные из БД (откат изменений)
+        await reloadSectionData(section);
+
         document.querySelectorAll(`[data-editable^="${section}"]`).forEach(el => {
             el.contentEditable = 'false';
             el.classList.remove('editing-active');
@@ -428,30 +415,115 @@ function showEditActions(section, overlay) {
             el.style.color = '';
         });
     });
-    
+
     actions.appendChild(indicator);
     actions.appendChild(saveBtn);
     actions.appendChild(cancelBtn);
     document.body.appendChild(actions);
 }
 
-// === СОХРАНЕНИЕ ===
-function saveSection(section) {
-    const data = loadData();
-    const editableElements = document.querySelectorAll(`[data-editable^="${section}"]`);
-    
-    editableElements.forEach(el => {
-        const path = el.dataset.editable;
-        const value = el.textContent || el.innerText || '';
-        const keys = path.split('.');
-        const lastKey = keys.pop();
-        const obj = keys.reduce((acc, key) => acc[key] = acc[key] || {}, data);
-        obj[lastKey] = value.trim();
-    });
-    
-    saveData(data);
-    applyDataToDOM(data);
+// ==========================================
+// СОХРАНЕНИЕ В БД
+// ==========================================
+
+async function saveSection(section) {
+    try {
+        // Загружаем текущие данные из БД
+        const person = await api.person.get();
+
+        // Собираем изменения из DOM
+        const updates = {};
+
+        document.querySelectorAll(`[data-editable^="${section}"]`).forEach(el => {
+            const path = el.dataset.editable; // "hero.name", "about.intro"
+            const value = (el.textContent || el.innerText || '').trim();
+            const field = path.split('.')[1]; // "name" или "intro"
+
+            // Преобразуем название поля из data-editable в поле БД
+            const fieldMap = {
+                // Hero
+                'hero.name': 'name',
+                'hero.subtitle': 'short_profession',
+                'hero.description': 'hero_description',
+                // About
+                'about.name': 'name',
+                'about.experience': 'short_profession',
+                'about.intro': 'bio',
+                'about.description': 'description'
+            };
+
+            const dbField = fieldMap[path];
+            if (dbField) {
+                // Если это intro — убираем "Привет! Я ..." из начала
+                if (path === 'about.intro') {
+                    // Убираем часть "Привет! Я X." — оставляем только био
+                    const cleanValue = value.replace(/^Привет! Я .+?\.\s*/, '');
+                    updates[dbField] = cleanValue;
+                } else {
+                    updates[dbField] = value;
+                }
+            }
+        });
+
+        // Объединяем с существующими данными
+        const newData = {
+            name: updates.name || person.name,
+            first_name: person.first_name,
+            last_name: person.last_name,
+            profession: person.profession,
+            short_profession: updates.short_profession || person.short_profession,
+            bio: updates.bio || person.bio,
+            description: updates.description || person.description,
+            hero_description: updates.hero_description || person.hero_description
+        };
+
+        // Отправляем в БД
+        await api.person.update(newData);
+
+        console.log(`✅ Секция "${section}" сохранена в БД`);
+    } catch (err) {
+        console.error('❌ Ошибка сохранения:', err);
+        showNotification('❌ Не удалось сохранить', 'error');
+    }
 }
+
+// ==========================================
+// ПЕРЕЗАГРУЗКА ДАННЫХ СЕКЦИИ (откат)
+// ==========================================
+
+async function reloadSectionData(section) {
+    try {
+        const person = await api.person.get();
+
+        if (section === 'hero') {
+            const heroName = document.querySelector('[data-editable="hero.name"]');
+            const heroSubtitle = document.querySelector('[data-editable="hero.subtitle"]');
+            const heroDesc = document.querySelector('[data-editable="hero.description"]');
+
+            if (heroName) heroName.textContent = person.name;
+            if (heroSubtitle) heroSubtitle.textContent = person.short_profession;
+            if (heroDesc) heroDesc.textContent = person.hero_description;
+        }
+
+        if (section === 'about') {
+            const aboutName = document.querySelector('[data-editable="about.name"]');
+            const aboutExp = document.querySelector('[data-editable="about.experience"]');
+            const aboutIntro = document.querySelector('[data-editable="about.intro"]');
+            const aboutDesc = document.querySelector('[data-editable="about.description"]');
+
+            if (aboutName) aboutName.textContent = person.name;
+            if (aboutExp) aboutExp.textContent = person.short_profession;
+            if (aboutIntro) aboutIntro.innerHTML = `<strong>Привет! Я ${person.name}.</strong> ${person.bio}`;
+            if (aboutDesc) aboutDesc.textContent = person.description;
+        }
+    } catch (err) {
+        console.error('❌ Ошибка перезагрузки:', err);
+    }
+}
+
+// ==========================================
+// ВСПОМОГАТЕЛЬНОЕ
+// ==========================================
 
 export function updateEditorState() {
     const isAdmin = localStorage.getItem('isAdmin') === 'true';
@@ -462,37 +534,11 @@ export function updateEditorState() {
     }
 }
 
-function showToast(message) {
-    const toast = document.createElement('div');
-    toast.textContent = message;
-    toast.style.cssText = `
-        position: fixed;
-        bottom: 100px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(45, 107, 79, 0.9);
-        color: white;
-        padding: 14px 32px;
-        border-radius: 12px;
-        font-weight: 600;
-        z-index: 9999;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-        animation: slideUp 0.4s ease;
-        font-family: 'Segoe UI', sans-serif;
-        font-size: 0.95rem;
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.5s ease';
-        setTimeout(() => toast.remove(), 500);
-    }, 3000);
-}
-
 export function logoutAdmin() {
     localStorage.removeItem('isAdmin');
     removeEditOverlays();
-    showToast('👋 Вы вышли из режима администратора');
+    showNotification('👋 Вы вышли из режима администратора', 'info');
+
     const authBtn = document.getElementById('authOpenBtn');
     if (authBtn) {
         authBtn.textContent = '🔑 Вход';
@@ -500,13 +546,14 @@ export function logoutAdmin() {
         authBtn.style.color = '#121212';
         authBtn.style.border = 'none';
     }
+
     const adminPanelBtn = document.getElementById('adminPanelBtn');
     if (adminPanelBtn) {
         adminPanelBtn.style.display = 'none';
     }
 }
 
-// Стили
+// Стили анимации
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideUp {

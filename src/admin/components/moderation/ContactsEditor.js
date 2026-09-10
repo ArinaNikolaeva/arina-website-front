@@ -1,13 +1,20 @@
 // ==========================================
-// РЕДАКТОР КОНТАКТОВ
+// РЕДАКТОР КОНТАКТОВ (API)
 // ==========================================
 
-import { siteConfig } from '../../../data/siteConfig.js';
+import { api } from '../../../data/api.js';
 import { createModal, showNotification } from './helpers.js';
 
-export function openContactsEditor(sidebar) {
-    const contacts = getContacts();
+export async function openContactsEditor(sidebar) {
+    // 1. Загружаем текущие контакты из БД
+    let contacts = { telegram: '', vk: '', email: '' };
+    try {
+        contacts = await api.contacts.get();
+    } catch (err) {
+        console.warn('⚠️ Не удалось загрузить контакты:', err.message);
+    }
 
+    // 2. Открываем модалку
     const { modal: editor, close } = createModal({
         overlayClass: 'contacts-editor-overlay',
         modalClass: 'contacts-editor',
@@ -40,41 +47,34 @@ export function openContactsEditor(sidebar) {
     editor.querySelector('#contactsEditorClose').addEventListener('click', close);
     editor.querySelector('#contactsEditorCancel').addEventListener('click', close);
 
-    // ✅ Обработчик на КНОПКУ, а не на форму
-    editor.querySelector('#saveContactsBtn').addEventListener('click', () => {
+    // 3. Сохранение через API
+    editor.querySelector('#saveContactsBtn').addEventListener('click', async () => {
         const newContacts = {
             telegram: editor.querySelector('#contactTelegram').value.trim(),
             vk: editor.querySelector('#contactVk').value.trim(),
             email: editor.querySelector('#contactEmail').value.trim()
         };
 
-        saveContacts(newContacts);
+        try {
+            // Отправляем в БД
+            await api.contacts.update(newContacts);
 
-        // Обновляем превью в сайдбаре
-        if (sidebar) {
-            const previewTelegram = sidebar.querySelector('#previewTelegram');
-            const previewVk = sidebar.querySelector('#previewVk');
-            const previewEmail = sidebar.querySelector('#previewEmail');
+            // Обновляем превью в сайдбаре
+            if (sidebar) {
+                const previewTelegram = sidebar.querySelector('#previewTelegram');
+                const previewVk = sidebar.querySelector('#previewVk');
+                const previewEmail = sidebar.querySelector('#previewEmail');
 
-            if (previewTelegram) previewTelegram.textContent = newContacts.telegram || '—';
-            if (previewVk) previewVk.textContent = newContacts.vk || '—';
-            if (previewEmail) previewEmail.textContent = newContacts.email || '—';
+                if (previewTelegram) previewTelegram.textContent = newContacts.telegram || '—';
+                if (previewVk) previewVk.textContent = newContacts.vk || '—';
+                if (previewEmail) previewEmail.textContent = newContacts.email || '—';
+            }
+
+            showNotification('✓ Контакты сохранены в БД', 'success');
+            close();
+        } catch (err) {
+            console.error('❌ Ошибка сохранения:', err);
+            showNotification('❌ Не удалось сохранить контакты', 'error');
         }
-
-        showNotification('✓ Контакты сохранены', 'success');
-        close();
     });
-}
-
-// === ХЕЛПЕРЫ ===
-function getContacts() {
-    const saved = localStorage.getItem('siteContacts');
-    if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
-    }
-    return { ...siteConfig.contacts };
-}
-
-function saveContacts(contacts) {
-    localStorage.setItem('siteContacts', JSON.stringify(contacts));
 }

@@ -1,13 +1,20 @@
 // ==========================================
-// МОДЕРАЦИЯ FAQ + РЕДАКТОР
+// МОДЕРАЦИЯ FAQ + РЕДАКТОР (API)
 // ==========================================
 
-import { faqData } from '../../../data/faq.js';
+import { api } from '../../../data/api.js';
 import { createModal, showNotification } from './helpers.js';
 
-export function openFaqModeration() {
-    const allFaq = getAllFaq();
+export async function openFaqModeration() {
+    // 1. Загружаем FAQ из БД
+    let allFaq = [];
+    try {
+        allFaq = await api.faq.getAll();
+    } catch (err) {
+        console.warn('⚠️ Не удалось загрузить FAQ:', err.message);
+    }
 
+    // 2. Открываем модалку
     const { modal, close } = createModal({
         overlayClass: 'faq-moderation-overlay',
         modalClass: 'faq-moderation',
@@ -27,16 +34,18 @@ export function openFaqModeration() {
 
     modal.querySelector('#faqModerationClose').addEventListener('click', close);
 
+    // 3. Создать новый
     modal.querySelector('#createFaqBtn').addEventListener('click', () => {
         close();
         setTimeout(() => openFaqEditor(null), 350);
     });
 
+    // 4. Открыть на редактирование
     modal.querySelectorAll('.faq-moderation-card').forEach(card => {
         card.addEventListener('click', (e) => {
             if (e.target.closest('.faq-moderation-actions')) return;
             const id = parseInt(card.dataset.id);
-            const item = getAllFaq().find(f => f.id === id);
+            const item = allFaq.find(f => f.id === id);
             if (item) {
                 close();
                 setTimeout(() => openFaqEditor(item), 350);
@@ -44,18 +53,29 @@ export function openFaqModeration() {
         });
     });
 
+    // 5. Удалить
     modal.querySelectorAll('.faq-delete').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             if (!confirm('Удалить этот вопрос?')) return;
+
             const id = parseInt(btn.dataset.id);
-            deleteFaqById(id);
-            showNotification('⊘ Вопрос удалён', 'success');
-            close();
-            setTimeout(openFaqModeration, 350);
+            try {
+                await api.faq.delete(id);
+                showNotification('⊘ Вопрос удалён из БД', 'success');
+                close();
+                setTimeout(openFaqModeration, 350);
+            } catch (err) {
+                console.error('❌ Ошибка удаления:', err);
+                showNotification('❌ Не удалось удалить', 'error');
+            }
         });
     });
 }
+
+// ==========================================
+// РЕНДЕР СПИСКА
+// ==========================================
 
 function renderFaqList(faq) {
     if (!faq.length) {
@@ -85,10 +105,13 @@ function renderFaqList(faq) {
     `;
 }
 
-// === РЕДАКТОР FAQ ===
+// ==========================================
+// РЕДАКТОР FAQ
+// ==========================================
+
 function openFaqEditor(item = null) {
     const isNew = !item;
-    const currentItem = item || { id: Date.now(), question: '', answer: '' };
+    const currentItem = item || { id: null, question: '', answer: '' };
 
     const { modal: editor, close } = createModal({
         overlayClass: 'faq-editor-overlay',
@@ -118,55 +141,28 @@ function openFaqEditor(item = null) {
     editor.querySelector('#faqEditorClose').addEventListener('click', close);
     editor.querySelector('#cancelFaqBtn').addEventListener('click', close);
 
-    editor.querySelector('#saveFaqBtn').addEventListener('click', () => {
-        const updatedItem = {
-            id: currentItem.id,
+    // === СОХРАНЕНИЕ В БД ===
+    editor.querySelector('#saveFaqBtn').addEventListener('click', async () => {
+        const data = {
             question: editor.querySelector('#faqQuestion').value.trim() || 'Без вопроса',
-            answer: editor.querySelector('#faqAnswer').value.trim() || 'Без ответа'
+            answer: editor.querySelector('#faqAnswer').value.trim() || 'Без ответа',
+            sort_order: 0
         };
 
-        if (isNew) {
-            createFaq(updatedItem);
-            showNotification('✓ Вопрос создан', 'success');
-        } else {
-            updateFaq(updatedItem);
-            showNotification('✓ Вопрос сохранён', 'success');
+        try {
+            if (isNew) {
+                await api.faq.create(data);
+                showNotification('✓ Вопрос создан в БД', 'success');
+            } else {
+                await api.faq.update(currentItem.id, data);
+                showNotification('✓ Вопрос сохранён в БД', 'success');
+            }
+
+            close();
+            setTimeout(openFaqModeration, 350);
+        } catch (err) {
+            console.error('❌ Ошибка сохранения:', err);
+            showNotification('❌ Не удалось сохранить', 'error');
         }
-
-        close();
-        setTimeout(openFaqModeration, 350);
     });
-}
-
-// === ХЕЛПЕРЫ ===
-function getAllFaq() {
-    const saved = localStorage.getItem('siteFaq');
-    if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
-    }
-    return faqData || [];
-}
-
-function saveAllFaq(faq) {
-    localStorage.setItem('siteFaq', JSON.stringify(faq));
-}
-
-function createFaq(item) {
-    const faq = getAllFaq();
-    faq.push(item);
-    saveAllFaq(faq);
-}
-
-function updateFaq(item) {
-    const faq = getAllFaq();
-    const index = faq.findIndex(f => f.id === item.id);
-    if (index !== -1) {
-        faq[index] = item;
-        saveAllFaq(faq);
-    }
-}
-
-function deleteFaqById(id) {
-    const faq = getAllFaq().filter(f => f.id !== id);
-    saveAllFaq(faq);
 }

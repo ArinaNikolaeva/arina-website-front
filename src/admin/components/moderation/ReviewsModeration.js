@@ -1,16 +1,26 @@
 // ==========================================
-// МОДЕРАЦИЯ ОТЗЫВОВ
+// МОДЕРАЦИЯ ОТЗЫВОВ (API)
 // ==========================================
+
 import { updatePanelNotificationDot } from '../AdminPanel.js';
-import { siteConfig } from '../../../data/siteConfig.js';
+import { api } from '../../../data/api.js';
 import { createModal, showNotification, getCriterionLabel } from './helpers.js';
-import { reviewsData } from '../../../data/reviews.js';
 
-export function openReviewsModeration() {
-    const allReviews = getAllReviews();
-    const pending = allReviews.filter(r => r.isModerated === false);
-    const published = allReviews.filter(r => r.isModerated !== false);
+export async function openReviewsModeration() {
+    // 1. Загружаем отзывы из БД
+    let pending = [];
+    let published = [];
 
+    try {
+        [pending, published] = await Promise.all([
+            api.reviews.getPending(),
+            api.reviews.getPublished(),
+        ]);
+    } catch (err) {
+        console.warn('⚠️ Не удалось загрузить отзывы:', err.message);
+    }
+
+    // 2. Открываем модалку
     const { modal, close } = createModal({
         overlayClass: 'reviews-moderation-overlay',
         modalClass: 'reviews-moderation',
@@ -55,51 +65,46 @@ export function openReviewsModeration() {
         });
     });
 
-    // === КНОПКИ ===
+    // === ОДОБРИТЬ ===
     modal.querySelectorAll('.review-approve').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const id = parseFloat(btn.dataset.id);
-        approveReview(id);
-        showNotification('✓ Отзыв опубликован', 'success');
-        close();
-        updatePanelNotificationDot();
-        updateReviewsTileDot();   // ← новая строка
-        setTimeout(openReviewsModeration, 350);
+        btn.addEventListener('click', async () => {
+            const id = parseInt(btn.dataset.id);
+            try {
+                await api.reviews.approve(id);
+                showNotification('✓ Отзыв опубликован', 'success');
+                close();
+                updatePanelNotificationDot();
+                setTimeout(openReviewsModeration, 350);
+            } catch (err) {
+                console.error('❌ Ошибка одобрения:', err);
+                showNotification('❌ Не удалось одобрить', 'error');
+            }
+        });
     });
-});
 
-modal.querySelectorAll('.review-delete').forEach(btn => {
-    btn.addEventListener('click', () => {
-        if (!confirm('Удалить этот отзыв?')) return;
-        const id = parseFloat(btn.dataset.id);
-        deleteReviewById(id);
-        showNotification('⊘ Отзыв удалён', 'success');
-        close();
-        updatePanelNotificationDot();
-        updateReviewsTileDot();   // ← новая строка
-        setTimeout(openReviewsModeration, 350);
+    // === УДАЛИТЬ ===
+    modal.querySelectorAll('.review-delete').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            if (!confirm('Удалить этот отзыв?')) return;
+            const id = parseInt(btn.dataset.id);
+            try {
+                await api.reviews.delete(id);
+                showNotification('⊘ Отзыв удалён', 'success');
+                close();
+                updatePanelNotificationDot();
+                setTimeout(openReviewsModeration, 350);
+            } catch (err) {
+                console.error('❌ Ошибка удаления:', err);
+                showNotification('❌ Не удалось удалить', 'error');
+            }
+        });
     });
-});
-
-// === ОБНОВЛЕНИЕ ТОЧКИ НА ПЛИТКЕ "ОТЗЫВОВ" ===
-function updateReviewsTileDot() {
-    const tile = document.querySelector('#reviewsStatTile');
-    if (!tile) return;
-
-    const pendingCount = getAllReviews().filter(r => r.isModerated === false).length;
-    const existingDot = tile.querySelector('.stat-dot');
-
-    if (pendingCount > 0 && !existingDot) {
-        const dot = document.createElement('span');
-        dot.className = 'panel-notification-dot stat-dot';
-        tile.appendChild(dot);
-    } else if (pendingCount === 0 && existingDot) {
-        existingDot.remove();
-    }
-}
 }
 
-// === РЕНДЕР СПИСКА ===
+// ==========================================
+// РЕНДЕР СПИСКА
+// ==========================================
+
 function renderReviewList(reviews, type) {
     if (!reviews.length) {
         return `
@@ -145,28 +150,4 @@ function renderReviewList(reviews, type) {
             `).join('')}
         </div>
     `;
-}
-
-// === ХЕЛПЕРЫ ===
-function getAllReviews() {
-    const saved = localStorage.getItem('psychologist_reviews');
-    if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
-    }
-    // ✅ Берём из reviewsData
-    return reviewsData || [];
-}
-
-function approveReview(id) {
-    const reviews = getAllReviews();
-    const review = reviews.find(r => r.id === id);
-    if (review) {
-        review.isModerated = true;
-        localStorage.setItem('psychologist_reviews', JSON.stringify(reviews));
-    }
-}
-
-function deleteReviewById(id) {
-    const reviews = getAllReviews().filter(r => r.id !== id);
-    localStorage.setItem('psychologist_reviews', JSON.stringify(reviews));
 }

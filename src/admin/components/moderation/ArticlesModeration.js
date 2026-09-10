@@ -1,13 +1,20 @@
 // ==========================================
-// МОДЕРАЦИЯ СТАТЕЙ + РЕДАКТОР
+// МОДЕРАЦИЯ СТАТЕЙ + РЕДАКТОР (API)
 // ==========================================
 
-import { articlesData } from '../../../data/articles.js';
+import { api } from '../../../data/api.js';
 import { createModal, showNotification } from './helpers.js';
 
-export function openArticlesModeration() {
-    const allArticles = getAllArticles();
+export async function openArticlesModeration() {
+    // 1. Загружаем статьи из БД
+    let allArticles = [];
+    try {
+        allArticles = await api.articles.getAll();
+    } catch (err) {
+        console.warn('⚠️ Не удалось загрузить статьи:', err.message);
+    }
 
+    // 2. Открываем модалку
     const { modal, close } = createModal({
         overlayClass: 'articles-moderation-overlay',
         modalClass: 'articles-moderation',
@@ -29,16 +36,18 @@ export function openArticlesModeration() {
 
     modal.querySelector('#articlesModerationClose').addEventListener('click', close);
 
+    // 3. Создать новую
     modal.querySelector('#createArticleBtn').addEventListener('click', () => {
         close();
         setTimeout(() => openArticleEditor(null), 350);
     });
 
+    // 4. Открыть на редактирование
     modal.querySelectorAll('.article-moderation-card').forEach(card => {
         card.addEventListener('click', (e) => {
             if (e.target.closest('.article-moderation-actions')) return;
             const id = parseInt(card.dataset.id);
-            const article = getAllArticles().find(a => a.id === id);
+            const article = allArticles.find(a => a.id === id);
             if (article) {
                 close();
                 setTimeout(() => openArticleEditor(article), 350);
@@ -46,18 +55,29 @@ export function openArticlesModeration() {
         });
     });
 
+    // 5. Удалить
     modal.querySelectorAll('.article-delete').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             e.stopPropagation();
             if (!confirm('Удалить эту статью?')) return;
+
             const id = parseInt(btn.dataset.id);
-            deleteArticleById(id);
-            showNotification('⊘ Статья удалена', 'success');
-            close();
-            setTimeout(openArticlesModeration, 350);
+            try {
+                await api.articles.delete(id);
+                showNotification('⊘ Статья удалена из БД', 'success');
+                close();
+                setTimeout(openArticlesModeration, 350);
+            } catch (err) {
+                console.error('❌ Ошибка удаления:', err);
+                showNotification('❌ Не удалось удалить', 'error');
+            }
         });
     });
 }
+
+// ==========================================
+// РЕНДЕР СПИСКА
+// ==========================================
 
 function renderArticlesList(articles) {
     if (!articles.length) {
@@ -81,9 +101,9 @@ function renderArticlesList(articles) {
                         <div class="article-moderation-meta">
                             <span>${article.date}</span>
                             <span>·</span>
-                            <span>${article.readingTime}</span>
-                            <span class="article-moderation-status ${article.isPublished === false ? 'draft' : 'published'}">
-                                ${article.isPublished === false ? '◌ Черновик' : '● Опубликовано'}
+                            <span>${article.reading_time}</span>
+                            <span class="article-moderation-status ${article.is_published === 0 ? 'draft' : 'published'}">
+                                ${article.is_published === 0 ? '◌ Черновик' : '● Опубликовано'}
                             </span>
                         </div>
                     </div>
@@ -96,19 +116,22 @@ function renderArticlesList(articles) {
     `;
 }
 
-// === РЕДАКТОР СТАТЬИ ===
+// ==========================================
+// РЕДАКТОР СТАТЬИ
+// ==========================================
+
 function openArticleEditor(article = null) {
     const isNew = !article;
     const currentArticle = article || {
-        id: Date.now(),
+        id: null,
         title: '',
         category: 'Веб-разработка',
         date: new Date().toLocaleDateString('ru-RU'),
-        readingTime: '5 мин чтения',
-        image: '/images/article-1.jpg',
+        reading_time: '5 мин чтения',
+        image: 'images/article-1.jpg',
         preview: '',
         content: '',
-        isPublished: true
+        is_published: 1
     };
 
     const categories = ['Веб-разработка', 'Дизайн', 'Поддержка и SEO', 'Бизнес', 'Сайты-визитки', 'Лендинги'];
@@ -139,7 +162,7 @@ function openArticleEditor(article = null) {
                         </div>
                         <div class="article-editor-group">
                             <label>Время чтения</label>
-                            <input type="text" id="articleReadingTime" value="${currentArticle.readingTime}" placeholder="5 мин чтения">
+                            <input type="text" id="articleReadingTime" value="${currentArticle.reading_time}" placeholder="5 мин чтения">
                         </div>
                     </div>
                     <div class="article-editor-group">
@@ -160,20 +183,13 @@ function openArticleEditor(article = null) {
                     <div class="article-editor-group">
                         <label>Обложка статьи</label>
                         <div class="article-image-preview" id="articleImagePreview" style="background-image: url('${currentArticle.image}');"></div>
-                        <input type="text" id="articleImage" value="${currentArticle.image}" placeholder="/images/article-1.jpg" style="margin-top: 10px;">
-                        <div class="article-image-upload">
-                            <div class="article-file-icon">📎</div>
-                            <div class="article-file-text">
-                                Перетащите или выберите файл
-                                <span class="article-file-hint">JPG, PNG, WebP · до 5 МБ</span>
-                            </div>
-                        </div>
+                        <input type="text" id="articleImage" value="${currentArticle.image}" placeholder="images/article-1.jpg" style="margin-top: 10px;">
                     </div>
                     <div class="article-editor-group">
                         <label>Статус</label>
                         <div class="article-status-toggle">
-                            <button class="status-btn ${currentArticle.isPublished !== false ? 'active' : ''}" data-status="published">● Опубликовано</button>
-                            <button class="status-btn ${currentArticle.isPublished === false ? 'active' : ''}" data-status="draft">◌ Черновик</button>
+                            <button class="status-btn ${currentArticle.is_published !== 0 ? 'active' : ''}" data-status="published">● Опубликовано</button>
+                            <button class="status-btn ${currentArticle.is_published === 0 ? 'active' : ''}" data-status="draft">◌ Черновик</button>
                         </div>
                     </div>
                 </div>
@@ -188,11 +204,12 @@ function openArticleEditor(article = null) {
         `
     });
 
-    let currentStatus = currentArticle.isPublished !== false;
+    let currentStatus = currentArticle.is_published !== 0;
 
     editor.querySelector('#articleEditorClose').addEventListener('click', close);
     editor.querySelector('#cancelArticleBtn').addEventListener('click', close);
 
+    // Переключение статуса
     editor.querySelectorAll('.status-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             editor.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
@@ -201,67 +218,41 @@ function openArticleEditor(article = null) {
         });
     });
 
+    // Превью картинки
     const imageInput = editor.querySelector('#articleImage');
     const imagePreview = editor.querySelector('#articleImagePreview');
     imageInput.addEventListener('input', () => {
         imagePreview.style.backgroundImage = `url('${imageInput.value}')`;
     });
 
-    editor.querySelector('#saveArticleBtn').addEventListener('click', () => {
-        const updatedArticle = {
-            id: currentArticle.id,
+    // === СОХРАНЕНИЕ В БД ===
+    editor.querySelector('#saveArticleBtn').addEventListener('click', async () => {
+        const data = {
             title: editor.querySelector('#articleTitle').value.trim() || 'Без названия',
             category: editor.querySelector('#articleCategory').value,
             date: editor.querySelector('#articleDate').value.trim(),
-            readingTime: editor.querySelector('#articleReadingTime').value.trim(),
+            reading_time: editor.querySelector('#articleReadingTime').value.trim(),
             image: editor.querySelector('#articleImage').value.trim(),
             preview: editor.querySelector('#articlePreview').value.trim(),
             content: editor.querySelector('#articleContent').value.trim(),
-            isPublished: currentStatus
+            is_published: currentStatus ? 1 : 0,
+            sort_order: 0
         };
 
-        if (isNew) {
-            createArticle(updatedArticle);
-            showNotification('✓ Статья создана', 'success');
-        } else {
-            updateArticle(updatedArticle);
-            showNotification('✓ Статья сохранена', 'success');
+        try {
+            if (isNew) {
+                await api.articles.create(data);
+                showNotification('✓ Статья создана в БД', 'success');
+            } else {
+                await api.articles.update(currentArticle.id, data);
+                showNotification('✓ Статья сохранена в БД', 'success');
+            }
+
+            close();
+            setTimeout(openArticlesModeration, 350);
+        } catch (err) {
+            console.error('❌ Ошибка сохранения:', err);
+            showNotification('❌ Не удалось сохранить', 'error');
         }
-
-        close();
-        setTimeout(openArticlesModeration, 350);
     });
-}
-
-// === ХЕЛПЕРЫ ===
-function getAllArticles() {
-    const saved = localStorage.getItem('siteArticles');
-    if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
-    }
-    return articlesData || [];
-}
-
-function saveAllArticles(articles) {
-    localStorage.setItem('siteArticles', JSON.stringify(articles));
-}
-
-function createArticle(article) {
-    const articles = getAllArticles();
-    articles.push(article);
-    saveAllArticles(articles);
-}
-
-function updateArticle(article) {
-    const articles = getAllArticles();
-    const index = articles.findIndex(a => a.id === article.id);
-    if (index !== -1) {
-        articles[index] = article;
-        saveAllArticles(articles);
-    }
-}
-
-function deleteArticleById(id) {
-    const articles = getAllArticles().filter(a => a.id !== id);
-    saveAllArticles(articles);
 }

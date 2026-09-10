@@ -3,7 +3,6 @@
 // ==========================================
 
 import { api } from '../../data/api.js';
-import { siteConfig } from '../../data/siteConfig.js';
 
 // === РЕНДЕР КАРКАСА ===
 export function renderAbout() {
@@ -18,9 +17,7 @@ export function renderAbout() {
                 <p data-editable="about.intro" id="aboutIntro"></p>
                 <p data-editable="about.description" id="aboutDescription"></p>
 
-                <div class="about-meta">
-                    ${siteConfig.tags.map(tag => `<span>${tag}</span>`).join('')}
-                </div>
+                <div class="about-meta" id="aboutMeta"></div>
             </div>
         </div>
 
@@ -37,11 +34,10 @@ export function renderAbout() {
 // === ЗАГРУЗКА ДАННЫХ ===
 export async function initAbout() {
     try {
-        const [person, images, education, certificates] = await Promise.all([
+        const [person, images, education] = await Promise.all([
             api.person.get(),
             api.images.getAll(),
             api.education.getAll(),
-            api.certificates.getAll(),
         ]);
 
         // === Фото ===
@@ -61,6 +57,17 @@ export async function initAbout() {
         if (aboutExp) aboutExp.textContent = person.short_profession || '';
         if (aboutIntro) aboutIntro.innerHTML = `<strong>Привет! Я ${person.name}.</strong> ${person.bio}`;
         if (aboutDesc) aboutDesc.textContent = person.description || '';
+
+        // === Теги ===
+        const meta = document.getElementById('aboutMeta');
+        if (meta) {
+            const tags = [
+                '✦ ИРНИТУ (политех)',
+                '✶ Веб-разработка',
+                '✉︎ Сайт-визитка · Полноценный сайт · Сопровождение сайта'
+            ];
+            meta.innerHTML = tags.map(tag => `<span>${tag}</span>`).join('');
+        }
 
         // === Образование ===
         const list = document.getElementById('educationListAbout');
@@ -107,7 +114,6 @@ export async function initAbout() {
             }
         }
 
-        // === Сертификаты (можно добавить позже) ===
         console.log('✅ About загружен');
     } catch (err) {
         console.error('❌ Ошибка загрузки About:', err);
