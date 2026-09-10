@@ -2,19 +2,16 @@
 // HEADER
 // ==========================================
 
-import { siteConfig } from '../../data/siteConfig.js';
-
 export function renderHeader() {
     const isAdmin = localStorage.getItem('isAdmin') === 'true';
-    const person = siteConfig.person;
 
     return `
         <header class="header" id="header">
             <div class="container header-inner">
                 <div class="logo" id="logoLink">
                     <span class="logo-icon">✦</span>
-                    <span class="logo-name">${person.firstName}</span>
-                    <span class="logo-lastname">${person.lastName}</span>
+                    <span class="logo-name" id="logoName"></span>
+                    <span class="logo-lastname" id="logoLastName"></span>
                 </div>
                 <nav class="nav">
                     <a href="#about">Об авторе</a>
@@ -34,12 +31,21 @@ export function renderHeader() {
     `;
 }
 
-export function initHeader() {
+// === ЗАГРУЗКА ИМЕНИ ИЗ API ===
+export async function initHeader(person) {
+    const name = document.getElementById('logoName');
+    const lastName = document.getElementById('logoLastName');
+
+    if (name && person) name.textContent = person.first_name || '';
+    if (lastName && person) lastName.textContent = person.last_name || '';
+
+    // Логотип — скролл наверх
     document.getElementById('logoLink')?.addEventListener('click', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
+    // Кнопка "Панель"
     document.getElementById('adminPanelBtn')?.addEventListener('click', () => {
-        alert('🛠️ Панель администратора в разработке');
+        console.log('🛠️ Панель администратора в разработке');
     });
 }

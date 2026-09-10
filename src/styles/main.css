@@ -1,0 +1,92 @@
+/* ==========================================
+   ГЛАВНЫЙ CSS
+   ========================================== */
+
+/* === БАЗА === */
+@import '../ui/styles/variables.css';
+@import '../ui/styles/global.css';
+
+/* === КОМПОНЕНТЫ === */
+@import '../ui/components/Button.css';
+@import '../ui/components/Card.css';
+@import '../ui/components/Carousel.css';
+@import '../ui/components/Modal.css';
+@import '../ui/components/Reviews.css';
+@import '../ui/components/StatsCounter.css';
+
+/* === СТРАНИЦЫ === */
+@import '../ui/pages/Hero.css';
+@import '../ui/pages/About.css';
+@import '../ui/pages/Articles.css';
+@import '../ui/pages/FAQ.css';
+
+/* === LAYOUT === */
+@import '../ui/layouts/Header.css';
+@import '../ui/layouts/Footer.css';
+
+/* === АДМИН === */
+@import '../admin/components/AuthModal.css';
+@import '../admin/components/InlineEditor.css';
+@import '../admin/components/AdminPanel.css';
+
+/* ==========================================
+   КАСТОМНЫЙ СКРОЛЛБАР
+   ========================================== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #D48B6A;
+}
+
+/* Для модальных окон */
+.review-form-container::-webkit-scrollbar,
+.modal-content::-webkit-scrollbar,
+.admin-modal::-webkit-scrollbar {
+    width: 6px;
+}
+
+.review-form-container::-webkit-scrollbar-thumb,
+.modal-content::-webkit-scrollbar-thumb,
+.admin-modal::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+
+.review-form-container::-webkit-scrollbar-thumb:hover,
+.modal-content::-webkit-scrollbar-thumb:hover,
+.admin-modal::-webkit-scrollbar-thumb:hover {
+    background: #D48B6A;
+}
+
+textarea::-webkit-scrollbar {
+    width: 6px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+    background: #D48B6A;
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #555 #1a1a1a;
+}

@@ -2,23 +2,6 @@
 // РЕДАКТИРОВАНИЕ — ПРОСТАЯ РАБОЧАЯ ВЕРСИЯ
 // ==========================================
 
-import { siteConfig } from '../../data/siteConfig.js';
-
-// ✅ БЕРЁМ ДАННЫЕ ИЗ siteConfig
-const defaultData = {
-    about: {
-        name: siteConfig.person.name,
-        experience: siteConfig.person.shortProfession,
-        intro: siteConfig.person.bio,
-        description: siteConfig.person.description
-    },
-    hero: {
-        name: siteConfig.person.name,
-        subtitle: siteConfig.person.shortProfession,
-        description: siteConfig.person.heroDescription
-    }
-};
-
 export function loadData() {
     const saved = localStorage.getItem('editorData');
     if (saved) {
@@ -53,7 +36,7 @@ export function applyDataToDOM(data) {
 
 export function initInlineEditor() {
     const isAdmin = localStorage.getItem('isAdmin') === 'true';
-    applyDataToDOM(loadData());
+    
     
     if (isAdmin) {
         addEditOverlays();
